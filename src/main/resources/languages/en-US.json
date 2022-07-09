@@ -112,9 +112,6 @@
       "command_usage": "Usage: account <create|delete> <username> [UID]",
       "invalid": "Invalid UID.",
       "exists": "An account with this username and/or UID already exists.",
-      "create": "Account created with UID %s.",
-      "delete": "Account deleted.",
-      "no_account": "Account not found.",
       "description": "Modify user accounts"
     },
     "announce": {

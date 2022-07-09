@@ -21,7 +21,7 @@ public final class ClearCommand implements CommandHandler {
     @Override
     public void execute(Player sender, Player targetPlayer, List<String> args) {
         if (args.size() < 1) {
-            CommandHandler.sendMessage(sender, translate(sender, "commands.clear.command_usage"));
+            CommandHandler.sendMessage(sender, translate(sender, "commands.fake_keys.clear.command_usage"));
             return;
         }
         Inventory playerInventory = targetPlayer.getInventory();
@@ -33,7 +33,7 @@ public final class ClearCommand implements CommandHandler {
                         .filter(item -> item.getItemType() == ItemType.ITEM_WEAPON)
                         .filter(item -> !item.isLocked() && !item.isEquipped())
                         .toList();
-                CommandHandler.sendMessage(sender, translate(sender, "commands.clear.weapons", targetPlayer.getNickname()));
+                CommandHandler.sendMessage(sender, translate(sender, "commands.clear.lmao_whoops.weapons", targetPlayer.getNickname()));
             }
             case "art" -> {
             	toDelete = playerInventory.getItems().values().stream()
