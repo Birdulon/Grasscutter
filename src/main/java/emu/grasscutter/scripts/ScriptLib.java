@@ -6,9 +6,13 @@ import emu.grasscutter.game.entity.EntityMonster;
 import emu.grasscutter.game.entity.GameEntity;
 import emu.grasscutter.game.entity.gadget.GadgetWorktop;
 import emu.grasscutter.game.dungeons.challenge.factory.ChallengeFactory;
+import emu.grasscutter.game.props.EntityType;
+import emu.grasscutter.game.quest.enums.QuestState;
+import emu.grasscutter.game.quest.enums.QuestTrigger;
 import emu.grasscutter.scripts.data.SceneGroup;
 import emu.grasscutter.scripts.data.SceneRegion;
 import emu.grasscutter.server.packet.send.PacketCanUseSkillNotify;
+import emu.grasscutter.server.packet.send.PacketDungeonShowReminderNotify;
 import emu.grasscutter.server.packet.send.PacketWorktopOptionNotify;
 import io.netty.util.concurrent.FastThreadLocal;
 import org.luaj.vm2.LuaTable;
@@ -478,6 +482,11 @@ public class ScriptLib {
 		logger.debug("[LUA] Call AddQuestProgress with {}",
 				var1);
 
+        for(var player : getSceneScriptManager().getScene().getPlayers()){
+            player.getQuestManager().triggerEvent(QuestTrigger.QUEST_COND_LUA_NOTIFY, var1);
+            player.getQuestManager().triggerEvent(QuestTrigger.QUEST_CONTENT_LUA_NOTIFY, var1);
+        }
+
 		return 0;
 	}
 
@@ -502,4 +511,47 @@ public class ScriptLib {
 
 		return 1;
 	}
+
+    public int GetEntityType(int entityId){
+        var entity = getSceneScriptManager().getScene().getEntityById(entityId);
+        if(entity == null){
+            return EntityType.None.getValue();
+        }
+
+        return entity.getEntityType();
+    }
+
+    public int GetQuestState(int entityId, int questId){
+        var player = getSceneScriptManager().getScene().getWorld().getHost();
+
+        var quest = player.getQuestManager().getQuestById(questId);
+        if(quest == null){
+            return QuestState.QUEST_STATE_NONE.getValue();
+        }
+
+        return quest.getState().getValue();
+    }
+
+    public int ShowReminder(int reminderId){
+        getSceneScriptManager().getScene().broadcastPacket(new PacketDungeonShowReminderNotify(reminderId));
+        return 0;
+    }
+
+    public int RemoveEntityByConfigId(int groupId, int entityType, int configId){
+        logger.debug("[LUA] Call RemoveEntityByConfigId");
+
+        var entity = getSceneScriptManager().getScene().getEntities().values().stream()
+            .filter(e -> e.getGroupId() == groupId)
+            .filter(e -> e.getEntityType() == entityType)
+            .filter(e -> e.getConfigId() == configId)
+            .findFirst();
+
+        if(entity.isEmpty()){
+            return 1;
+        }
+
+        getSceneScriptManager().getScene().removeEntity(entity.get());
+
+        return 0;
+    }
 }
