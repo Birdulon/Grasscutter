@@ -22,7 +22,6 @@ jobs:
         uses: actions/checkout@v2
         with:
           ref: LintRatchet
-          token: ${{ secrets.GH_TOKEN }}
       - name: Checkout development
         uses: actions/checkout@v2
         with:
@@ -48,10 +47,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
       - name: Run Spotless
-        run:
-          - git checkout development -- build.gradle
-          - ./gradlew spotlessApply
-          - git checkout -- build.gradle
+        run: git checkout development -- build.gradle && ./gradlew spotlessApply && git checkout -- build.gradle
       - name: Commit any Spotless changes
         uses: EndBug/add-and-commit@v9
         with:
