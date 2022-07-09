@@ -20,6 +20,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+      - name: Checkout LintRatchet
+        uses: actions/checkout@v2
+        with:
+          ref: 'LintRatchet'
       - name: Setup Java
         uses: actions/setup-java@v3
         with:
@@ -35,6 +39,8 @@ jobs:
           key: ${{ runner.os }}-gradle-${{ hashFiles('*.gradle', 'gradle.properties', '**/*.accesswidener') }}
           restore-keys: |
             ${{ runner.os }}-gradle-
+      - name: Run Spotless
+        run: ./gradlew spotlessApply && git add -u && git -c user.name='spotless' -c user.email='formatter@formatter.com' commit --author="spotless <formatter@formatter.com>" -m "[auto] Fix whitespace"
       - name: Run Gradle
         run: ./gradlew && ./gradlew jar
       - name: Upload build
