@@ -18,12 +18,19 @@ jobs:
   Build-Server-Jar:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
       - name: Checkout LintRatchet
         uses: actions/checkout@v2
         with:
-          ref: 'LintRatchet'
+          ref: LintRatchet
+      - name: Checkout development
+        uses: actions/checkout@v2
+        with:
+          ref: development
+      - name: Checkout Branch
+        uses: actions/checkout@v2
+        with:
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.ref }}
       - name: Setup Java
         uses: actions/setup-java@v3
         with:
@@ -40,7 +47,13 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
       - name: Run Spotless
-        run: ./gradlew spotlessApply && git add -u && git -c user.name='spotless' -c user.email='formatter@formatter.com' commit --author="spotless <formatter@formatter.com>" -m "[auto] Fix whitespace"
+        run: git checkout development -- build.gradle && ./gradlew spotlessApply && git checkout -- build.gradle
+      - name: Commit any Spotless changes
+        uses: EndBug/add-and-commit@v9
+        with:
+          add: '-u'
+          default_author: github_actions
+          message: 'Fix whitespace'
       - name: Run Gradle
         run: ./gradlew && ./gradlew jar
       - name: Upload build
