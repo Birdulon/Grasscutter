@@ -747,9 +747,9 @@ public class InventorySystem extends BaseGameSystem {
                 break;
             case MATERIAL_CONSUME:
                 // Make sure we have usage data for this material.
-                if (itemData.getItemUse() == null) {
-                    break;
-                }
+                // if (itemData.getItemUse() == null) {
+                //     break;
+                // }
 
                 ItemUseOp useOp = itemData.getItemUse().get(0).getUseOp();
 
