@@ -12,6 +12,7 @@ import emu.grasscutter.data.ResourceType.LoadPriority;
 import emu.grasscutter.data.common.PropGrowCurve;
 import emu.grasscutter.game.props.FightProperty;
 import emu.grasscutter.game.props.MonsterType;
+import it.unimi.dsi.fastutil.ints.IntList;
 import lombok.Getter;
 
 @ResourceType(name = "MonsterExcelConfigData.json", loadPriority = LoadPriority.LOW)
@@ -25,7 +26,7 @@ public class MonsterData extends GameResource {
     private String monsterName;
     private MonsterType type;
     private String serverScript;
-    private List<Integer> affix;
+    private IntList affix;
     private String ai;
     private int[] equips;
     private List<HpDrops> hpDrops;

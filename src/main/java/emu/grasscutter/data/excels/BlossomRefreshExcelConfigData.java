@@ -1,9 +1,8 @@
 package emu.grasscutter.data.excels;
 
-import java.util.List;
-
 import emu.grasscutter.data.GameResource;
 import emu.grasscutter.data.ResourceType;
+import it.unimi.dsi.fastutil.ints.IntList;
 import lombok.Getter;
 
 @ResourceType(name = "BlossomRefreshExcelConfigData.json")
@@ -40,6 +39,6 @@ public class BlossomRefreshExcelConfigData extends GameResource {
     @Getter
     public static class RefreshCond {
         String type;
-        List<Integer> param;
+        IntList param;
     }
 }

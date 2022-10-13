@@ -1,6 +1,7 @@
 package emu.grasscutter.data.binout;
 
 import emu.grasscutter.utils.Position;
+import it.unimi.dsi.fastutil.ints.IntList;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
@@ -28,5 +29,5 @@ public class SceneNpcBornEntry {
     int groupId;
     
     @SerializedName(value="suiteIdList", alternate={"_suiteIdList"})
-    List<Integer> suiteIdList;
+    IntList suiteIdList;
 }

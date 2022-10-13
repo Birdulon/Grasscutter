@@ -3,6 +3,7 @@ package emu.grasscutter.data.excels;
 import emu.grasscutter.data.GameData;
 import emu.grasscutter.data.GameResource;
 import emu.grasscutter.data.ResourceType;
+import it.unimi.dsi.fastutil.ints.IntList;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.experimental.FieldDefaults;
@@ -16,8 +17,8 @@ public class InvestigationMonsterData extends GameResource {
     @Getter(onMethod = @__(@Override))
     int id;
     int cityId;
-    List<Integer> monsterIdList;
-    List<Integer> groupIdList;
+    IntList monsterIdList;
+    IntList groupIdList;
     int rewardPreviewId;
     String mapMarkCreateType;
     String monsterCategory;

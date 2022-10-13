@@ -32,8 +32,8 @@ public class AvatarData extends GameResource {
     @Getter private int staminaRecoverSpeed;
     @Getter private List<String> candSkillDepotIds;
     @Getter private String avatarIdentityType;
-    @Getter private List<Integer> avatarPromoteRewardLevelList;
-    @Getter private List<Integer> avatarPromoteRewardIdList;
+    @Getter private IntList avatarPromoteRewardLevelList;
+    @Getter private IntList avatarPromoteRewardIdList;
 
     @Getter private long nameTextMapHash;
 
@@ -57,7 +57,7 @@ public class AvatarData extends GameResource {
     @Getter private AvatarSkillDepotData skillDepot;
     @Getter private IntList abilities;
 
-    @Getter private List<Integer> fetters;
+    @Getter private IntList fetters;
     @Getter private int nameCardRewardId;
     @Getter private int nameCardId;
 

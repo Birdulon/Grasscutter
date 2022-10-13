@@ -25,10 +25,10 @@ public class AvatarSkillDepotData extends GameResource {
     private int energySkill;
     private int attackModeSkill;
 
-    private List<Integer> skills;
-    private List<Integer> subSkills;
+    private IntList skills;
+    private IntList subSkills;
     private List<String> extraAbilities;
-    private List<Integer> talents;
+    private IntList talents;
     private List<InherentProudSkillOpens> inherentProudSkillOpens;
 
     private String talentStarName;

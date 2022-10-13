@@ -2,6 +2,7 @@ package emu.grasscutter.data.excels;
 
 import emu.grasscutter.data.GameResource;
 import emu.grasscutter.data.ResourceType;
+import it.unimi.dsi.fastutil.ints.IntList;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
@@ -16,7 +17,7 @@ import java.util.List;
 public class CityData extends GameResource {
     int cityId;
     int sceneId;
-    List<Integer> areaIdVec;
+    IntList areaIdVec;
 
     @Override
     public int getId() {

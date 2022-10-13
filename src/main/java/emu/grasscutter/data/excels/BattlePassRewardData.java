@@ -2,18 +2,16 @@ package emu.grasscutter.data.excels;
 
 import emu.grasscutter.data.GameResource;
 import emu.grasscutter.data.ResourceType;
+import it.unimi.dsi.fastutil.ints.IntList;
 import lombok.Getter;
-import lombok.Setter;
-
-import java.util.List;
 
 @ResourceType(name = "BattlePassRewardExcelConfigData.json")
 @Getter
 public class BattlePassRewardData extends GameResource {
     private int indexId;
     private int level;
-    private List<Integer> freeRewardIdList;
-    private List<Integer> paidRewardIdList;
+    private IntList freeRewardIdList;
+    private IntList paidRewardIdList;
 
     @Override
     public int getId() {

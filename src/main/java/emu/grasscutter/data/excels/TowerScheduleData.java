@@ -2,13 +2,14 @@ package emu.grasscutter.data.excels;
 
 import emu.grasscutter.data.GameResource;
 import emu.grasscutter.data.ResourceType;
+import it.unimi.dsi.fastutil.ints.IntList;
 
 import java.util.List;
 
 @ResourceType(name = "TowerScheduleExcelConfigData.json")
 public class TowerScheduleData extends GameResource {
     private int scheduleId;
-    private List<Integer> entranceFloorId;
+    private IntList entranceFloorId;
     private List<ScheduleDetail> schedules;
     private int monthlyLevelConfigId;
     
@@ -29,7 +30,7 @@ public class TowerScheduleData extends GameResource {
         return scheduleId;
     }
 
-    public List<Integer> getEntranceFloorId() {
+    public IntList getEntranceFloorId() {
         return entranceFloorId;
     }
 
@@ -42,9 +43,9 @@ public class TowerScheduleData extends GameResource {
     }
 
     public static class ScheduleDetail{
-        private List<Integer> floorList;
+        private IntList floorList;
 
-        public List<Integer> getFloorList() {
+        public IntList getFloorList() {
             return floorList;
         }
     }

@@ -122,10 +122,10 @@ public class GameData {
     // Cache
     @Getter private static final IntList scenePointIdList = new IntArrayList();
     @Getter private static final List<OpenStateData> openStateList = new ArrayList<>();
-    @Getter private static final Map<Integer, List<Integer>> scenePointsPerScene = new HashMap<>();
+    @Getter private static final Int2ObjectMap<IntSet> scenePointsPerScene = new Int2ObjectOpenHashMap<>();
     @Getter private static final Map<String, ScriptSceneData> scriptSceneDataMap = new HashMap<>();
-    private static Map<Integer, List<Integer>> fetters = new HashMap<>();
-    private static Map<Integer, List<ShopGoodsData>> shopGoods = new HashMap<>();
+    @Getter(lazy = true) private static final Int2ObjectMap<IntList> fetterDataEntries = makeFetterDataEntries();
+    @Getter(lazy = true) private static final Int2ObjectMap<List<ShopGoodsData>> shopGoodsDataEntries = makeShopGoodsDataEntries();
     protected static Int2ObjectMap<IntSet> proudSkillGroupLevels = new Int2ObjectOpenHashMap<>();
     protected static Int2IntMap proudSkillGroupMaxLevels = new Int2IntOpenHashMap();
     protected static Int2ObjectMap<IntSet> avatarSkillLevels = new Int2ObjectOpenHashMap<>();
@@ -177,6 +177,18 @@ public class GameData {
         return Optional.ofNullable(getRelicLevelData(rankLevel, level)).map(d -> d.getExp()).orElse(0);
     }
 
+    // Lazy getter initializers
+    private static Int2ObjectMap<IntList> makeFetterDataEntries() {
+        var fetters = new Int2ObjectOpenHashMap<IntList>();
+        fetterDataMap.forEach((k, v) -> fetters.computeIfAbsent(v.getAvatarId(), i -> new IntArrayList()).add(k));
+        return fetters;
+    }
+
+    private static Int2ObjectMap<List<ShopGoodsData>> makeShopGoodsDataEntries() {
+        var shopGoods = new Int2ObjectOpenHashMap<List<ShopGoodsData>>();
+        shopGoodsDataMap.forEach((k, v) -> shopGoods.computeIfAbsent(v.getShopType(), i -> new ArrayList<>()).add(v));
+        return shopGoods;
+    }
 
     // Generic getter
     public static Int2ObjectMap<?> getMapByResourceDef(Class<?> resourceDefinition) {
@@ -196,7 +208,6 @@ public class GameData {
     }
 
 
-
     public static int getWeaponExpRequired(int rankLevel, int level) {
         WeaponLevelData levelData = weaponLevelDataMap.get(level);
         if (levelData == null) {
@@ -207,30 +218,5 @@ public class GameData {
         } catch (Exception e) {
             return 0;
         }
-    }
-
-    public static Map<Integer, List<Integer>> getFetterDataEntries() {
-        if (fetters.isEmpty()) {
-            fetterDataMap.forEach((k, v) -> {
-                if (!fetters.containsKey(v.getAvatarId())) {
-                    fetters.put(v.getAvatarId(), new ArrayList<>());
-                }
-                fetters.get(v.getAvatarId()).add(k);
-            });
-        }
-
-        return fetters;
-    }
-
-    public static Map<Integer, List<ShopGoodsData>> getShopGoodsDataEntries() {
-        if (shopGoods.isEmpty()) {
-            shopGoodsDataMap.forEach((k, v) -> {
-                if (!shopGoods.containsKey(v.getShopType()))
-                    shopGoods.put(v.getShopType(), new ArrayList<>());
-                shopGoods.get(v.getShopType()).add(v);
-            });
-        }
-
-        return shopGoods;
     }
 }

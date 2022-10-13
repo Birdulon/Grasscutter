@@ -151,7 +151,7 @@ public class ResourceLoader {
 
                 if (config.points == null) return;
 
-                val scenePoints = new IntArrayList();
+                val scenePoints = new IntArraySet();
                 config.points.forEach((pointId, pointData) -> {
                     val scenePoint = new ScenePointEntry(sceneId, pointData);
                     scenePoints.add(pointId);

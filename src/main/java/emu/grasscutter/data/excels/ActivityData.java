@@ -3,6 +3,7 @@ package emu.grasscutter.data.excels;
 import emu.grasscutter.data.GameData;
 import emu.grasscutter.data.GameResource;
 import emu.grasscutter.data.ResourceType;
+import it.unimi.dsi.fastutil.ints.IntList;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.experimental.FieldDefaults;
@@ -16,8 +17,8 @@ import java.util.Objects;
 public class ActivityData extends GameResource {
     int activityId;
     String activityType;
-    List<Integer> condGroupId;
-    List<Integer> watcherId;
+    IntList condGroupId;
+    IntList watcherId;
     List<ActivityWatcherData> watcherDataList;
 
     @Override

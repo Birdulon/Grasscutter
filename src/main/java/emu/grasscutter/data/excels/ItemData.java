@@ -13,6 +13,7 @@ import emu.grasscutter.game.props.FightProperty;
 import emu.grasscutter.game.props.ItemUseOp;
 import emu.grasscutter.game.props.ItemUseTarget;
 import emu.grasscutter.game.props.ItemUseAction.ItemUseAction;
+import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import lombok.Getter;
@@ -79,8 +80,8 @@ public class ItemData extends GameResource {
 
     // Furniture
     private int comfort;
-    private List<Integer> furnType;
-    private List<Integer> furnitureGadgetID;
+    private IntList furnType;
+    private IntList furnitureGadgetID;
 
     @SerializedName(value="roomSceneId", alternate={"BMEPAMCNABE", "DANFGGLKLNO", "JFDLJGDFIGL", "OHIANNAEEAK"})
     private int roomSceneId;
@@ -117,10 +118,10 @@ public class ItemData extends GameResource {
         }
 
         if (this.getFurnType() != null) {
-            this.furnType = this.furnType.stream().filter(x -> x > 0).toList();
+            this.furnType.removeIf(x -> x <= 0);
         }
         if (this.getFurnitureGadgetID() != null) {
-            this.furnitureGadgetID = this.furnitureGadgetID.stream().filter(x -> x > 0).toList();
+            this.furnitureGadgetID.removeIf(x -> x <= 0);
         }
 
         // Prevent material type from being null
