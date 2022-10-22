@@ -3,13 +3,13 @@ package emu.grasscutter.game.quest;
 import java.util.*;
 
 import emu.grasscutter.Grasscutter;
-import emu.grasscutter.data.binout.ScriptSceneData;
 import emu.grasscutter.data.excels.QuestData;
 import emu.grasscutter.game.quest.enums.LogicType;
 import emu.grasscutter.game.quest.enums.QuestTrigger;
 import emu.grasscutter.scripts.ScriptLoader;
 import emu.grasscutter.server.packet.send.PacketCodexDataUpdateNotify;
 import emu.grasscutter.utils.Position;
+import it.unimi.dsi.fastutil.booleans.BooleanArrayList;
 import lombok.Getter;
 import org.bson.types.ObjectId;
 
@@ -28,9 +28,7 @@ import emu.grasscutter.game.quest.enums.ParentQuestState;
 import emu.grasscutter.game.quest.enums.QuestState;
 import emu.grasscutter.net.proto.ChildQuestOuterClass.ChildQuest;
 import emu.grasscutter.net.proto.ParentQuestOuterClass.ParentQuest;
-import emu.grasscutter.net.proto.QuestOuterClass.Quest;
 import emu.grasscutter.server.packet.send.PacketFinishedParentQuestUpdateNotify;
-import emu.grasscutter.server.packet.send.PacketQuestListUpdateNotify;
 import emu.grasscutter.server.packet.send.PacketQuestProgressUpdateNotify;
 
 import javax.script.Bindings;
@@ -57,7 +55,7 @@ public class GameMainQuest {
     @Getter int[] suggestTrackMainQuestList;
     @Getter private Map<Integer,TalkData> talks;
     //key is subId
-    private Map<Integer,Position> rewindPositions;
+    private Map<Integer,Position> rewindPositions;  // These should be replaced with a new datatype holding pos and rot. Database migration will be a pain.
     private Map<Integer,Position> rewindRotations;
 
     @Deprecated // Morphia only. Do not use.
@@ -76,16 +74,13 @@ public class GameMainQuest {
         this.questGroupSuites = new ArrayList<>();
         this.rewindPositions = new HashMap<>();
         this.rewindRotations = new HashMap<>();
-        addAllChildQuests();
-        addRewindPoints();
+        this.addAllChildQuests();
+        this.addRewindPoints();
     }
 
     private void addAllChildQuests() {
-        List<Integer> subQuestIds = Arrays.stream(GameData.getMainQuestDataMap().get(this.parentQuestId).getSubQuests()).map(SubQuestData::getSubId).toList();
-        for (Integer subQuestId : subQuestIds) {
-            QuestData questConfig = GameData.getQuestDataMap().get(subQuestId);
-            this.childQuests.put(subQuestId, new GameQuest(this, questConfig));
-        }
+        Arrays.stream(GameData.getMainQuestDataMap().get(this.parentQuestId).getSubQuests()).map(SubQuestData::getSubId).forEach(subQuestId ->
+            this.childQuests.put(subQuestId, new GameQuest(this, GameData.getQuestDataMap().get(subQuestId))));
     }
 
     public void setOwner(Player player) {
@@ -94,7 +89,7 @@ public class GameMainQuest {
     }
 
     public int getQuestVar(int i) {
-        return questVars[i];
+        return this.questVars[i];
     }
     public void setQuestVar(int i, int value) {
         int previousValue = this.questVars[i];
@@ -156,34 +151,23 @@ public class GameMainQuest {
     // Rewinds to the last finished/unfinished rewind quest, and returns the avatar rewind position (if it exists)
     public List<Position> rewind() {
         if (this.questManager == null) {
-            this.questManager = getOwner().getQuestManager();
+            this.questManager = this.getOwner().getQuestManager();
         }
-        List<GameQuest> sortedByOrder = new ArrayList<>(getChildQuests().values().stream().filter(q -> q.getQuestData().isRewind()).toList());
-        sortedByOrder.sort((a,b) -> {
-            if ( a == b) {
-                return 0;
-            }
-            return a.getQuestData().getOrder() > b.getQuestData().getOrder() ? 1 : -1;});
-        boolean didRewind = false;
-        for (GameQuest quest : sortedByOrder) {
-            int i = sortedByOrder.indexOf(quest);
-            if ( (i+1) >= sortedByOrder.size()) {
-                didRewind = quest.rewind(null);
-            } else {
-                didRewind = quest.rewind(sortedByOrder.get(i+1));
-            }
-            if (didRewind) {
-                break;
-            }
+        var sortedByOrder = this.getChildQuests().values().stream()
+            .filter(q -> q.getQuestData().isRewind())
+            .sorted((a,b) -> a.getQuestData().getOrder() - b.getQuestData().getOrder())
+            .toList();
+        for (int i = 0; i < sortedByOrder.size(); i++) {
+            if (sortedByOrder.get(i).rewind(sortedByOrder.get(i+1))) break;
         }
         List<GameQuest> rewindQuests = getChildQuests().values().stream()
             .filter(p -> (p.getState() == QuestState.QUEST_STATE_UNFINISHED || p.getState() == QuestState.QUEST_STATE_FINISHED) && p.getQuestData().isRewind()).toList();
         for (GameQuest quest : rewindQuests) {
             if (rewindPositions.containsKey(quest.getSubQuestId())) {
                 List<Position> posAndRot = new ArrayList<>();
-                posAndRot.add(0,rewindPositions.get(quest.getSubQuestId()));
-                posAndRot.add(1,rewindRotations.get(quest.getSubQuestId()));
-                  return posAndRot;
+                posAndRot.add(0, rewindPositions.get(quest.getSubQuestId()));
+                posAndRot.add(1, rewindRotations.get(quest.getSubQuestId()));
+                return posAndRot;
             }
         }
         return null;
@@ -203,39 +187,25 @@ public class GameMainQuest {
         // Eval script
         try {
             cs.eval(bindings);
+            var fullGlobals = GameData.getScriptSceneDataMap().get("flat.luas.scenes.full_globals.lua.json");
+            if (fullGlobals == null) return;
 
             var rewindDataMap = ScriptLoader.getSerializer().toMap(RewindData.class, bindings.get("rewind_data"));
-            for (String subId : rewindDataMap.keySet()) {
-                RewindData questRewind = rewindDataMap.get(subId);
-                if (questRewind != null) {
-                    RewindData.AvatarData avatarData = questRewind.getAvatar();
-                    if (avatarData != null) {
-                        String avatarPos = avatarData.getPos();
-                        QuestData.Guide guide = GameData.getQuestDataMap().get(Integer.valueOf(subId)).getGuide();
-                        if (guide != null) {
-                            int sceneId = guide.getGuideScene();
-                            ScriptSceneData fullGlobals = GameData.getScriptSceneDataMap().get("flat.luas.scenes.full_globals.lua.json");
-                            if (fullGlobals != null) {
-                                ScriptSceneData.ScriptObject dummyPointScript = fullGlobals.getScriptObjectList().get(sceneId + "/scene" + sceneId + "_dummy_points.lua");
-                                if (dummyPointScript != null) {
-                                    Map<String, List<Float>> dummyPointMap = dummyPointScript.getDummyPoints();
-                                    if (dummyPointMap != null) {
-                                        List<Float> avatarPosPos = dummyPointMap.get(avatarPos + ".pos");
-                                        if (avatarPosPos != null) {
-                                            Position pos = new Position(avatarPosPos.get(0),avatarPosPos.get(1),avatarPosPos.get(2));
-                                            List<Float> avatarPosRot = dummyPointMap.get(avatarPos + ".rot");
-                                            Position rot =  new Position(avatarPosRot.get(0),avatarPosRot.get(1),avatarPosRot.get(2));
-                                            rewindPositions.put(Integer.valueOf(subId),pos);
-                                            rewindRotations.put(Integer.valueOf(subId),rot);
-                                            Grasscutter.getLogger().debug("Succesfully loaded rewind position for subQuest {}",subId);
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
+            rewindDataMap.forEach((subId, questRewind) -> {
+                int id = Integer.valueOf(subId);
+                try {  // Wrapping all of this in a try-catch saves **a lot** of null-checking
+                    var sceneId = GameData.getQuestDataMap().get(id).getGuide().getGuideScene();
+                    var avatarPos = questRewind.getAvatar().getPos();
+                    var dummyPoints = fullGlobals.getScriptObjectList().get(sceneId + "/scene" + sceneId + "_dummy_points.lua").getDummyPoints();
+                    List<Float> avatarPosPos = dummyPoints.get(avatarPos + ".pos");
+                    List<Float> avatarPosRot = dummyPoints.get(avatarPos + ".rot");
+                    rewindPositions.put(id, new Position(avatarPosPos.get(0), avatarPosPos.get(1), avatarPosPos.get(2)));
+                    rewindRotations.put(id, new Position(avatarPosRot.get(0), avatarPosRot.get(1), avatarPosRot.get(2)));
+                    Grasscutter.getLogger().debug("Successfully loaded rewind position for subQuest " + subId);
+                } catch (NullPointerException e) {
+                    Grasscutter.getLogger().error("An error occurred while loading rewind positions for subQuest " + subId);
                 }
-            }
+            });
 
         } catch (ScriptException e) {
             Grasscutter.getLogger().error("An error occurred while loading rewind positions");
@@ -244,34 +214,24 @@ public class GameMainQuest {
 
     public void tryAcceptSubQuests(QuestTrigger condType, String paramStr, int... params) {
         try {
-            List<GameQuest> subQuestsWithCond = getChildQuests().values().stream()
+            this.getChildQuests().values().stream()
                 .filter(p -> p.getState() == QuestState.QUEST_STATE_UNSTARTED)
                 .filter(p -> p.getQuestData().getAcceptCond().stream().anyMatch(q -> q.getType() == condType))
-                .toList();
+                .forEach(subQuestWithCond -> {
+                        var questData = subQuestWithCond.getQuestData();
+                        var acceptCond = questData.getAcceptCond();
+                        var accept = new BooleanArrayList(acceptCond.size());
+                        acceptCond.forEach(cond -> accept.add(this.getOwner().getServer().getQuestSystem().triggerCondition(subQuestWithCond, cond, paramStr, params)));
 
-            for (GameQuest subQuestWithCond : subQuestsWithCond) {
-                List<QuestData.QuestCondition> acceptCond = subQuestWithCond.getQuestData().getAcceptCond();
-                int[] accept = new int[acceptCond.size()];
-
-                for (int i = 0; i < subQuestWithCond.getQuestData().getAcceptCond().size(); i++) {
-                    QuestData.QuestCondition condition = acceptCond.get(i);
-                    boolean result = this.getOwner().getServer().getQuestSystem().triggerCondition(subQuestWithCond, condition, paramStr, params);
-                    accept[i] = result ? 1 : 0;
-                }
-
-                boolean shouldAccept = LogicType.calculate(subQuestWithCond.getQuestData().getAcceptCondComb(), accept);
-
-                if (shouldAccept) {
-                    subQuestWithCond.start();
-                    getQuestManager().getAddToQuestListUpdateNotify().add(subQuestWithCond);
-                }
-
-            }
+                        if (LogicType.calculate(questData.getAcceptCondComb(), accept)) {
+                            subQuestWithCond.start();
+                            this.getQuestManager().getAddToQuestListUpdateNotify().add(subQuestWithCond);
+                        }
+                    });
             this.save();
         } catch (Exception e) {
             Grasscutter.getLogger().error("An error occurred while trying to accept quest.", e);
         }
-
     }
 
     public void tryFailSubQuests(QuestTrigger condType, String paramStr, int... params) {

@@ -170,11 +170,14 @@ public class GameQuest {
     }
     // Return true if ParentQuest should rewind to this childQuest
     public boolean rewind(GameQuest nextRewind) {
-        if (questData.isRewind()) {
-            if (nextRewind == null) {return true;}
+        if (this.questData.isRewind()) {
+            if (nextRewind == null) return true;
             // if the next isRewind subQuest is none or unstarted, reset all subQuests with order higher than this one, and restart this quest
             if (nextRewind.getState() == QuestState.QUEST_STATE_NONE|| nextRewind.getState() == QuestState.QUEST_STATE_UNSTARTED) {
-                getMainQuest().getChildQuests().values().stream().filter(p -> p.getQuestData().getOrder() > this.getQuestData().getOrder()).forEach(q -> q.setState(QuestState.QUEST_STATE_UNSTARTED));
+                int order = this.getQuestData().getOrder();
+                this.getMainQuest().getChildQuests().values().stream()
+                    .filter(p -> p.getQuestData().getOrder() > order)
+                    .forEach(q -> q.setState(QuestState.QUEST_STATE_UNSTARTED));
                 this.start();
                 return true;
             }
